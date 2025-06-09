@@ -1,11 +1,11 @@
 # Hi There 👋 I'm Connor Stone, Ph.D.
 
 I do research software development and statistics for astronomical applications.
-I especially like to work in astronomical image processing where squeezing out
-the most signal/precision/accuracy is critical to get science done! Lately I
-have been involved in projects where we use GPU acceleration and automatic
-differentiation to make powerful Bayesian analysis techniques possible. Check
-out the pinned repos below.
+I like to work in astronomical data processing where squeezing out the most
+signal/precision/accuracy is critical to get science done! Lately I have been
+involved in projects where we use GPU acceleration and automatic differentiation
+to make powerful Bayesian analysis techniques possible. Check out the pinned
+repos below.
 
 ## Research Software
 
@@ -16,6 +16,8 @@ I have written, or contributed to, a number of python packages for analyzing ast
 [![Static Badge](https://img.shields.io/badge/caskade-purple?style=for-the-badge)](https://caskade.readthedocs.io/)
 [![Static Badge](https://img.shields.io/badge/AutoProf-F90000?style=for-the-badge)](https://autoprof.readthedocs.io/)
 [![Static Badge](https://img.shields.io/badge/PQM-FBFAA3?style=for-the-badge)](https://github.com/Ciela-Institute/PQM)
+[![Static Badge](https://img.shields.io/badge/PTED-%23D08100?style=for-the-badge)](https://github.com/ConnorStoneAstro/pted)
+
 
 ## Reach me
 
@@ -28,12 +30,8 @@ My GitHub (you are here): [https://github.com/ConnorStoneAstro](https://github.c
 
 ### perfect is a score
 
-Perfect is a direction, but a direction pointing
-where? Well in probability a score is the gradient of the log probability, a
-direction of increasing probability density. If you want to properly explore a
-PDF you can't just go in the direction of the score, you need a little chaos
-such as introduced in Markov-Chain Monte Carlo. So perfect may be a score, but
-life is Metropolis Adjusted Langevin Algorithm.
+Perfect may be the gradient of a log density, but life is Metropolis Adjusted
+Langevin Algorithm.
 
 <!-- Astronomical image processing tool. Lets fit everything everywhere all at once!
 You can analyze multi-band, multi-epoch data with complex models where you are
