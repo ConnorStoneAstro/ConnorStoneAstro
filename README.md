@@ -18,6 +18,8 @@ I have written, or contributed to, a number of python packages for analyzing ast
 [![Static Badge](https://img.shields.io/badge/PQM-FBFAA3?style=for-the-badge)](https://github.com/Ciela-Institute/PQM)
 [![Static Badge](https://img.shields.io/badge/PTED-%23D08100?style=for-the-badge)](https://github.com/ConnorStoneAstro/pted)
 
+[![Connor's GitHub stats](https://github-readme-stats.vercel.app/api?username=ConnorStoneAstro&hide=stars&theme=vision-friendly-dark)](https://github.com/ConnorStoneAstro)
+
 
 ## Reach me
 
@@ -26,7 +28,6 @@ The best way to contact me is by email: [connorstone628@gmail.com](mailto:connor
 Also check out my website: [https://connorjstone.com/](https://connorjstone.com/)
 
 My GitHub (you are here): [https://github.com/ConnorStoneAstro](https://github.com/ConnorStoneAstro)
-
 
 ### perfect is a score
 
