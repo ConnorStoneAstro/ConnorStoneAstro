@@ -31,7 +31,10 @@ My GitHub: [https://github.com/ConnorStoneAstro](https://github.com/ConnorStoneA
 
 ## Mathematical Musings
 
-[See here](pages/index.md)
+From time to time I dive into some topic, and make a write up of my thoughts along the way. 
+Here are some pages with those write ups!
+
+[Mathematical Musings](pages/index.md)
 
 ### perfect is a score
 
