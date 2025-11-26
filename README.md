@@ -27,7 +27,11 @@ The best way to contact me is by email: [connorstone628@gmail.com](mailto:connor
 
 Also check out my website: [https://connorjstone.com/](https://connorjstone.com/)
 
-My GitHub (you are here): [https://github.com/ConnorStoneAstro](https://github.com/ConnorStoneAstro)
+My GitHub: [https://github.com/ConnorStoneAstro](https://github.com/ConnorStoneAstro)
+
+## Mathematical Musings
+
+[See here](pages/index.md)
 
 ### perfect is a score
 
