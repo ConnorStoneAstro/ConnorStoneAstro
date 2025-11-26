@@ -45,7 +45,7 @@ It is trivial to determine the redshift of a galaxy from a high resolution, high
 Trying to estimate these photometric redshifts is hard but not impossible, and we can see in Figure 2 that it broadly works well for a variety of algorithms.
 
 ![RAIL paper comparison of photometric redshift estimation algorithms](photoz_specz.png)
-*Figure 2: comparison of multiple photometric redshift estimation algorithms. Estimated redshift (y-axis) versus reference redshift (x-axis)*
+*Figure 2: comparison of multiple photometric redshift estimation algorithms. Estimated redshift (y-axis) versus reference redshift (x-axis). Reference: This is Figure 4 in [Zhang et al. 2025](https://ui.adsabs.harvard.edu/abs/2025arXiv251007370Z/abstract)*
 
 While the relations in Figure 2 are quite tight, there is clearly notable scatter for all of them that is significantly away from the 1:1 line.
 This is a cause of great consternation in the photo-z community, with many discussions on "de-biasing" the predictions.
