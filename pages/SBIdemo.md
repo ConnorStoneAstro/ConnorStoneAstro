@@ -14,32 +14,39 @@ Those two parts should describe how our data came about through a two step proce
 
 The goal of SBI is to infer the posterior on $\theta$ given some data $X$ and the two sampling functions above, under the restriction that we can't evaluate the probability densities of those functions.
 
-## The three approaches
+## The four approaches
 
-There are broadly three approaches to SBI used in the community: Neural Ratio Estimation (NRE), Neural Likelihood Estimation (NLE), and Neural Posterior Estimation (NPE).
-Though I would prefer to just call them: Ratio Estimation, Likelihood Estimation, and Posterior Estimation, since the "Neural" part is just a implementation detail and would be dropped tomorrow if we found something better than neural networks for the task.
+There are broadly four approaches to SBI used in the community: Neural Likelihood Estimation (NLE), Neural Posterior Estimation (NPE), Neural Joint Estimation (NJE), and Neural Ratio Estimation (NRE).
+Though I would prefer to just call them: Likelihood Estimation, Posterior Estimation, Joint Estimation, and Ratio Estimation, since the "Neural" part is just a implementation detail and would be dropped tomorrow if we found something better than neural networks for the task.
 
-In Figure 1 we plot the three different objectives of these SBI approaches.
+In Figure 1 we plot the four different objectives of these SBI approaches.
 
-- The most direct is the NPE (right) which simply fits a posterior density function so that one can later enter their data $X$ and get a probability density function (PDF) for the parameters of interest.
+- The first option NLE (top left) somewhat directly addresses the "Likelihood Free" aspect, since it attempts to approximate the likelihood density. This has some key advantages in that it is independent of the prior, and often (though not always) relatively simple compared to the others.
+- The most direct is the NPE (top right) which simply fits a posterior density function so that one can later enter their data $X$ and get a probability density function (PDF) for the parameters of interest.
 Note that having $P(\theta | X)$ can sometimes be only half the battle, if $\theta$ has many dimensions then even if we can evaluate it, we still will need to do some work to get marginal distributions.
-In fact for anything but a 1D or 2D parameter space, one would likely have to run MCMC sampling on the PDF to get the marginals.
-- The NRE (left) approach has some nice features, it can be easier to train (its just a classifier, see below), we can also get the evidence $P(X)$ in some cases (e.g. when the SBI method is a mixture of Gaussians).
-- The third option NLE (center) has some key advantages in that it is independent of the prior, and often (though not always) relatively simple compared to the others.
-In our example the likelihood may look bent, but keep in mind that the $\theta$ values are given, so all we need to learn is the parabola $\theta^2$ and a Gaussian with sigma of $2.0$.
+- The least used is NJE (bottom left) since it requires working with the highest dimensions possible (joined $\theta$ and $X$) which is really hard for density estimation. It also has to be globally normalized.
+- The NRE (bottom right) approach has some nice features, it can be easier to train (its just a classifier, see below), letting the prior do a lot of work later on (see the math stuff).
 
 ![Comparison of different SBI target distributions](SBIdemo.png)
 *Figure 1: Comparison of the different SBI target distributions. Here we see the interplay of the likelihood, prior, and different normalization directions in a very simple inference task.*
 
-Both the NRE and NPE have some drawbacks, namely that they bake the prior into their distribution so it is not possible (specifically it is not numerically stable) to change up the prior after the fact, a new SBI model would need to be trained for a new prior.
-Another issue is that the joint (NRE) and posterior (NPE) distributions can be quite complex, in our example in Figure 1 the joint distribution is bent strongly and the posterior is bimodal.
+The NPE, NJE, and NRE have a major drawback, namely that they bake the prior into their distribution so it is not possible (specifically it is not numerically stable) to change up the prior after the fact, a new SBI model would need to be trained for a new prior.
+Another factor is that the likelihood tends to be comparatively simple to model, in our example there is a mean relationship $X=\theta^2$ and after that it's just a Gaussian of constant width.
+Since an NLE is trained with the $\theta$ values provided, it is possible to train the NLE from any set of $\theta$ values, so one can use active learning to train more accurately; though there is some element of optimality in choosing the prior since it will give more examples where there ought to be more data.
+I should note that while the NRE appears hopeless in that the high values are all at high $X$ which we don't care about, the situation is actually not so bad.
+The training would happen in log density space, which handles very large/small values equally, and also the training data would be concentrated in the center where the prior dominates so the NRE would have lots of examples in the right area to constrain it.
+
+Figure 1 shows some cool effects that aren't SBI specific, but are just neat aspects of probability.
+Notice how in the Posterior distribution the probability is pulled towards the center, this is because of the prior.
+We see how the likelihood looks like it gets thinner for high $\theta$ values, though it is really constant thickness, its just that the $\theta^2$ relationship is getting very steep.
+I also think it is neat to see a real difference between $P(\theta, X)$, $P(\theta | X)$, and $P(X | \theta)$ since Gaussians alone are somewhat boring in this regard.
 
 ## Example
 
 There are some great examples of SBI being used in astronomy.
 [This paper](https://ui.adsabs.harvard.edu/abs/2019MNRAS.488.4440A/abstract) provides a nice overview of techniques, as well as some very simplified examples.
 
-I feel compelled to comment again that the "Neural" part of NRE, NPE, NLE is not always (in fact perhaps often not) needed.
+I feel compelled to comment again that the "Neural" part of NJE, NPE, NLE, and NRE is not always (in fact perhaps often not) needed.
 Consider the example of photometric redshift estimation as discussed in the [RAIL paper](https://ui.adsabs.harvard.edu/abs/2025arXiv251007370Z/abstract).
 It is trivial to determine the redshift of a galaxy from a high resolution, high signal-to-noise spectrum, but often all we get is a few wide integrated bands (photometry).
 Trying to estimate these photometric redshifts is hard but not impossible, and we can see in Figure 2 that it broadly works well for a variety of algorithms.
@@ -58,8 +65,8 @@ You would probably want to get a lot more examples, or apply some smoothing, but
 ## Some math
 
 Ok, so we don't **always** need a neural network, but sometimes we do, so how does that work?
-The NRE's are a bit different, so we'll start with NPE and NLE which are largely the same.
-Let's think of our NLE (just switch $X$ and $\theta$ for NPE) as a probability density $P(X | \theta, w)$ where $w$ are the network weights.
+The NRE's are a bit different, so we'll start with NPE, NJE, and NLE which are largely the same.
+Let's think of our NLE (just switch $X$ and $\theta$ around for NPE and use both for NJE) as a probability density $P(X | \theta, w)$ where $w$ are the network weights.
 Our target is the true $P(X | \theta)$ PDF, which we can enforce using the Kullback–Leibler divergence:
 
 $$D_{KL} = \int P(X_i|\theta)\ln\left(\frac{P(X_i|\theta,w)}{P(X_i|\theta)}\right)dX_i$$
@@ -78,10 +85,12 @@ So it is possible to minimize the KL divergence without ever directly evaluating
 
 The NRE method works a bit differently, for this you train a classifier.
 The classifier learns to distinguish $\{\theta, X\}$ pairs that were simulated together (the two step process at the top) vs random $\{\theta', X'\}$ marginal pairs (just pulled from a large collection).
-If you use the binary cross entropy loss then the classifier learns the ratio 
+If you use the binary cross entropy loss then in the limit of lots of examples/training the classifier learns the ratio:
 
 $$r(\theta, X) = \frac{P(\theta, X)}{P(\theta)P(X)}$$
 
-So I kind of cheated in Figure 1, the target for NRE isn't really $P(\theta, X)$ its $r(\theta, X)$, but for conceptual purposes it is useful to think that way.
 To get the posterior, it turns out that $r(\theta, X)P(\theta)$ is all you need!
-Alternately, one could use the KL-divergence technique to learn $P(\theta, X)$, but as I understand this can be tricky since it will be a large parameter space ($\theta$ dimensions and $X$ dimensions) to learn over, and crucially to normalize over.
+This just comes from the chain rule of probability.
+
+Finally, I should note that these probability distributions can also be trained using [score matching](https://arxiv.org/abs/2011.13456) with varying degrees of success.
+Score matching focuses a lot on modelling annealed versions of a PDF which can be way way easier, but may not perform as well at modelling the true (non-annealed) distributions.

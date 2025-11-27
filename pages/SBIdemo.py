@@ -6,21 +6,15 @@ from scipy.stats import norm
 def plot_sbi_distributions():
     # --- 1. Setup Parameters ---
     # Prior: Theta ~ N(0, 2)
-    # We use a wider prior so it doesn't suppress the "arms" of the parabola too much
-    # allowing us to see the likelihood shape effects clearly.
     mu_theta = 0.0
-    sigma_theta = 1.5
+    sigma_theta = 1.0
 
-    # Model: Parabolic likelihood
-    # x = theta^2 + noise
-    # Likelihood: P(x|theta) = N(theta^2, sigma_x)
-    sigma_x = 2.0
+    # Model: Parabolic likelihood x = theta^2 + noise
+    sigma_x = 1.0
 
     # --- 2. Create Grid ---
-    # Theta range [-3, 3] covers the prior well.
-    # X range [-2, 10] covers the parabola x=theta^2 (up to 9).
-    theta_range = np.linspace(-5, 5, 300)
-    x_range = np.linspace(-2, 15, 300)
+    theta_range = np.linspace(-4, 4, 300)
+    x_range = np.linspace(-2, 10, 300)
     Theta, X = np.meshgrid(theta_range, x_range)
 
     # --- 3. Calculate Densities ---
@@ -29,86 +23,72 @@ def plot_sbi_distributions():
     P_theta = norm.pdf(Theta, loc=mu_theta, scale=sigma_theta)
 
     # B. Likelihood P(x | theta)
-    # The mean of x is determined by theta^2
     P_x_given_theta = norm.pdf(X, loc=(Theta**2), scale=sigma_x)
 
     # C. Joint P(x, theta) = P(x | theta) * P(theta)
     P_joint = P_x_given_theta * P_theta
 
     # D. Marginal P(x) - Numerical Integration
-    # Since the model is non-linear, we integrate the joint distribution over theta.
-    # We use the trapezoidal rule along axis 1 (the theta axis).
-    # Reshape to (N_x, 1) so we can divide the (N_x, N_theta) joint matrix.
     P_x_marginal = np.trapz(P_joint, theta_range, axis=1).reshape(-1, 1)
 
     # E. Posterior P(theta | x) = P(x, theta) / P(x)
-    # Add a tiny epsilon to avoid division by zero in regions where P(x) is negligible
-    P_theta_given_x = P_joint / (P_x_marginal + 1e-12)
+    epsilon = 1e-12
+    P_theta_given_x = P_joint / (P_x_marginal + epsilon)
+
+    # F. Ratio R(x, theta) = P(x, theta) / (P(x) * P(theta))
+    # This is equivalent to P(x | theta) / P(x) or P(theta | x) / P(theta)
+    P_marginal_product = (P_x_marginal + epsilon) * (P_theta + epsilon)
+    P_ratio = P_joint / P_marginal_product
 
     # --- 4. Plotting ---
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5), constrained_layout=True)
+    fig, axes = plt.subplots(2, 2, figsize=(15, 12), constrained_layout=True)
 
-    def setup_axis(ax, title, z_data):
-        # We allow the contour plotter to auto-scale levels for each plot independently
-        # This ensures we see the full structure of each distribution
-        contour = ax.contourf(Theta, X, z_data, levels=50, cmap="viridis")
+    def setup_axis(ax, title, z_data, cmap="inferno"):
+        # Rasterize contourf for efficient PDF saving
+        # Removed colorbar creation
+        contour = ax.contourf(Theta, X, z_data, levels=50, cmap=cmap)
         contour.set_rasterized(True)
-        ax.set_xlabel(r"Parameter $\theta$")
-        ax.set_ylabel(r"Observation $x$")
-        ax.set_title(title, fontsize=14, pad=10)
+        ax.set_xlabel(r"Parameter $\theta$", fontsize=12)
+        ax.set_ylabel(r"Observation $x$", fontsize=12)
+        ax.set_title(title, fontsize=13, pad=10, fontweight="bold")
         ax.set_ylim(x_range[0], x_range[-1])
+        ax.set_xticks([])
+        ax.set_yticks([])
+
         # Draw the theoretical parabola x = theta^2 for reference
         ax.plot(
             theta_range,
             theta_range**2,
             color="k",
-            linewidth=0.5,
+            # alpha=0.3,
             linestyle="--",
             label=r"$x=\theta^2$",
         )
-
-        # Add colorbar
-        # cbar = fig.colorbar(contour, ax=ax, orientation='horizontal', pad=0.1)
-        # cbar.ax.tick_params(labelsize=10)
-        # cbar.solids.set_rasterized(True)
-
         return contour
 
-    # Plot 1: Joint Distribution
-    setup_axis(
-        axes[0],
-        r"Joint Distribution $P(X, \theta)$" + "\n" + r"(Target of Neural Ratio Estimation, NRE)",
-        P_joint,
-    )
-    axes[0].text(
-        0, 6.0, "Globally Normalized", color="white", ha="center", fontsize=9, fontweight="bold"
-    )
+    # --- Plot 1: Neural Likelihood Estimation (NLE) ---
+    ax_nle = axes[0, 0]
+    setup_axis(ax_nle, r"NLE: Likelihood $P(X | \theta)$", P_x_given_theta)
 
-    # Plot 2: Likelihood
-    setup_axis(
-        axes[1],
-        r"Likelihood $P(X | \theta)$" + "\n" + r"(Target of Neural Likelihood Estimation, NLE)",
-        P_x_given_theta,
-    )
-    # Annotation for Likelihood
-    # Show that vertical slices (fixed theta) have constant width
-    axes[1].annotate(
-        "", xy=(0, 4), xytext=(0, -1.5), arrowprops=dict(arrowstyle="<->", color="white", lw=2)
-    )
-    axes[1].text(
-        0, 5.0, "Normalized Vertically", color="white", ha="center", fontsize=9, fontweight="bold"
-    )
-
-    # --- ADDED: Overlay Prior on Likelihood Plot ---
-    # We use a twin axis because the Prior is density over Theta (different units than X)
-    ax_prior = axes[1].twinx()
+    # Overlay Prior on NLE with independent axis
+    ax_prior = ax_nle.twinx()
     prior_1d = norm.pdf(theta_range, loc=mu_theta, scale=sigma_theta)
+
     # Plot the prior as a red dashed line
-    ax_prior.plot(theta_range, prior_1d, color="red", linewidth=2.0, label=r"Prior $P(\theta)$")
-    # Style the twin axis
-    ax_prior.set_ylabel(r"Prior Density $P(\theta)$", color="red", fontsize=12)
-    ax_prior.tick_params(axis="y", labelcolor="red")
-    ax_prior.spines["right"].set_color("red")
+    ax_prior.plot(
+        theta_range,
+        prior_1d,
+        color="red",
+        # linestyle="--",
+        linewidth=2.0,
+        label=r"Prior $P(\theta)$",
+    )
+
+    # Style the twin axis explicitly (Red axis on the right)
+    # ax_prior.set_ylabel(r"Prior Density $P(\theta)$", color="red", fontsize=12)
+    # ax_prior.tick_params(axis="y", labelcolor="red")
+    # ax_prior.spines["right"].set_color("red")
+    ax_prior.set_yticks([])
     ax_prior.set_ylim(0, np.max(prior_1d) * 1.2)  # Give it a little headroom
     ax_prior.text(
         mu_theta,
@@ -120,35 +100,53 @@ def plot_sbi_distributions():
         fontweight="bold",
     )
 
-    # axes[1].plot(theta_range, P_theta, linewidth = 2, color = "white")
-
-    # Plot 3: Posterior
-    setup_axis(
-        axes[2],
-        r"Posterior $P(\theta | X)$" + "\n" + r"(Target of Neural Posterior Estimation, NPE)",
-        P_theta_given_x,
+    # Annotation for Likelihood
+    # Show that vertical slices (fixed theta) have constant width
+    ax_nle.annotate(
+        "", xy=(0, 2.5), xytext=(0, -1.5), arrowprops=dict(arrowstyle="<->", color="white", lw=2)
     )
-    # Annotation for Posterior
-    # Show how the distribution shape changes based on the slope of the parabola
+    ax_nle.text(
+        0, 3.0, "Normalized Vertically", color="white", ha="center", fontsize=9, fontweight="bold"
+    )
 
-    # Near vertex: Flat slope -> Wide uncertainty -> Low density
-    axes[2].annotate(
+    # --- Plot 2: Neural Posterior Estimation (NPE) ---
+    ax_npe = axes[0, 1]
+    setup_axis(ax_npe, r"NPE: Posterior $P(\theta | X)$", P_theta_given_x)
+    # Annotation for horizontal normalization
+    ax_npe.annotate(
         "", xy=(1.5, 1), xytext=(-1.5, 1), arrowprops=dict(arrowstyle="<->", color="white", lw=1.5)
     )
-    axes[2].text(
+    ax_npe.text(
         0, 1.3, "Normalized Horizontally", color="white", ha="center", fontsize=9, fontweight="bold"
     )
 
-    # On arms: Steep slope -> Narrow uncertainty -> High density
-    # axes[2].annotate("", xy=(2.5, 6), xytext=(1.8, 6),
-    #                 arrowprops=dict(arrowstyle="<->", color="white", lw=1.5))
-    # axes[2].text(2.2, 6.5, "Narrow &\nSharp", color="white", ha="center", fontsize=9, fontweight='bold')
+    # --- Plot 3: Neural Joint Estimation (NJE) ---
+    ax_nje = axes[1, 0]
+    setup_axis(ax_nje, r"NJE: Joint $P(X, \theta)$", P_joint)
+    ax_nje.text(
+        0, 6.0, "Globally Normalized", color="white", ha="center", fontsize=9, fontweight="bold"
+    )
 
-    fig.suptitle(
-        f"Visualizing SBI Objectives: Parabolic Case ($x = \\theta^2 + \\epsilon,~\\epsilon \\sim \\mathcal{{N}}(0,{sigma_x:.1f}^2)$)",
-        fontsize=18,
+    # --- Plot 4: Neural Ratio Estimation (NRE) ---
+    ax_nre = axes[1, 1]
+    # The ratio can be very large, so we sometimes plot log-ratio, but raw ratio shows the contrast well here.
+    setup_axis(ax_nre, r"NRE: Ratio $\frac{P(X, \theta)}{P(X)P(\theta)}$", P_ratio)
+    ax_nre.text(
+        0,
+        7,
+        "High where X and $\\theta$\nare covariant",
+        color="white",
+        ha="center",
+        fontsize=9,
         fontweight="bold",
     )
+
+    fig.suptitle(
+        f"Simulation-Based Inference Objectives: Parabolic Case ($x = \\theta^2 + \\epsilon,~\\epsilon \\sim \\mathcal{{N}}(0,{sigma_x:.1f}^2)$)",
+        fontsize=16,
+        fontweight="bold",
+    )
+
     plt.savefig("SBIdemo.png", dpi=300)
     plt.show()
 
