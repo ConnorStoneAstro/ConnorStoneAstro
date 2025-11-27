@@ -72,7 +72,7 @@ Our target is the true $P(X | \theta)$ PDF, which we can enforce using the Kullb
 $$D_{KL} = \int P(X_i|\theta)\ln\left(\frac{P(X_i|\theta,w)}{P(X_i|\theta)}\right)dX_i$$
 
 Which would be a nasty integral to solve directly, but we can do a good job with a Monte-Carlo estimate of the integral.
-To Monte-Carlo an integral, we sample from one component ($P(X_i | \theta)$) and evaluate the other component:
+To Monte-Carlo an integral, we sample from one component ($P(X_i | \theta)$ in this case) and evaluate the other component:
 
 $$D_{KL} \approx \frac{1}{N}\sum_{X_i\sim P(X_i|\theta)}\ln\left(\frac{P(X_i|\theta,w)}{P(X_i|\theta)}\right)$$
 
