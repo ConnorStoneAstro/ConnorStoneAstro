@@ -12,7 +12,15 @@ Those two parts should describe how our data came about through a two step proce
 1. Sample parameters $\theta_i \sim P(\theta)$
 1. Sample the data $X_i \sim P(X | \theta_i)$
 
-The goal of SBI is to infer the posterior on $\theta$ given some data $X$ and the two sampling functions above, under the restriction that we can't evaluate the probability densities of those functions.
+The goal of SBI is to infer the posterior on $\theta$ given some data $X$ and the two sampling functions above, under the restriction that we can't evaluate the probability densities of those functions (or at least not the likelihood).
+
+There are actually broadly three reasons you would want to use SBI:
+
+1. You can't evaluate your likelihood. This is the core motivation, it comes from very complex simulators that include as much realism as possible. Often such a focus on realism adds so much complexity that a likelihood density becomes impossible to determine.
+1. You can evaluate your likelihood, but it is very slow. In this case, evaluating the likelihood involves costly integrals, gigantic matrix inversions, or other compute heavy operations that are impractical to perform the many thousands of times necessary to sample the full distribution.
+1. Your likelihood has a large or trans-dimensional number of nuisance parameters. If you only care about a few parameters, you may be able to use SBI to marginalize over all/some of the nuisance parameters preemptively (just note that this likely means you are baking in a prior for those nuisance parameters).
+
+Of course, some mix of these challenges is more likely for any particular problem.
 
 ## The four approaches
 
